@@ -384,8 +384,8 @@
       <div>
         <h6>帮助中心</h6>
         <a onclick="toast('QQ 客服：2139743118，24 小时在线')">在线客服（QQ）</a>
-        <a onclick="toast('《隐私政策》整理中，敬请期待')">隐私策略</a>
-        <a onclick="toast('《服务条款》整理中，敬请期待')">服务条款</a>
+        <a href="privacy.html">隐私策略</a>
+        <a href="terms.html">服务条款</a>
       </div>
     </div>
     <div class="fbot">
@@ -518,7 +518,7 @@
     <div class="ptxt" style="margin-top:16px; font-size:12.5px; color:var(--mut); line-height:1.8; background:rgba(46,124,246,.08); border:1px solid rgba(46,124,246,.3); border-radius:10px; padding:12px 14px;">
       转账时请备注您的<b style="color:#C7D2E4">注册邮箱</b>，链上确认后自动到账。<br>如有疑问请联系 QQ 客服：2139743118
     </div>
-    <div class="lfoot">支付即代表同意 <b>《用户协议》</b> 与 <b>《隐私政策》</b> · 因产品性质，购买之后无法退款</div>
+    <div class="lfoot">支付即代表同意 <a href="terms.html"><b>《用户协议》</b></a> 与 <a href="privacy.html"><b>《隐私政策》</b></a> · 因产品性质，购买之后无法退款</div>
   </div>
 </div>
 
@@ -534,7 +534,7 @@
     <div class="fgroup"><label>密码</label><input id="l-pw" type="password" placeholder="请输入密码"></div>
     <div class="fgroup" id="l-pw2g" style="display:none"><label>确认密码</label><input id="l-pw2" type="password" placeholder="请再次输入密码"></div>
     <div class="fgroup" id="l-invg" style="display:none"><label>邀请码（选填）</label><input id="l-inv" placeholder="有邀请码可享受更多权益"></div>
-    <div class="agree"><i id="l-agree" style="cursor:pointer" onclick="lAgree()"></i><span>我已阅读并同意 <a data-tk="《用户协议》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《用户协议》</a> 与 <a data-tk="《隐私政策》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《隐私政策》</a></span></div>
+    <div class="agree"><i id="l-agree" style="cursor:pointer" onclick="lAgree()"></i><span>我已阅读并同意 <a href="terms.html">《用户协议》</a> 与 <a href="privacy.html">《隐私政策》</a></span></div>
     <button class="btn" id="l-btn" style="width:100%; justify-content:center; padding:13px 0" onclick="lSubmit()">立即登录</button>
     <div class="lfoot" id="l-foot">还没有账号？ <b onclick="lTab('reg')">立即注册</b></div>
   </div>
@@ -793,8 +793,8 @@ var T={
 '收款地址（USDT · BEP-20 / ERC-20）':'收款地址（USDT · BEP-20 / ERC-20）',
 '📋 复制地址':'📋 複製地址',
 '转账时请备注您的<b style="color:#C7D2E4">注册邮箱</b>，链上确认后自动到账。<br>如有疑问请联系 QQ 客服：2139743118':'轉帳時請備註您的<b style="color:#C7D2E4">註冊郵箱</b>，鏈上確認後自動到帳。<br>如有疑問請聯繫 QQ 客服：2139743118',
-'支付即代表同意 <b>《用户协议》</b> 与 <b>《隐私政策》</b> · 因产品性质，购买之后无法退款':'支付即代表同意 <b>《用戶協議》</b> 與 <b>《隱私政策》</b> · 因產品性質，購買之後無法退款',
-'我已阅读并同意 <a data-tk="《用户协议》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《用户协议》</a> 与 <a data-tk="《隐私政策》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《隐私政策》</a>':'我已閱讀並同意 <a data-tk="《用户协议》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《用戶協議》</a> 與 <a data-tk="《隐私政策》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《隱私政策》</a>',
+'支付即代表同意 <a href="terms.html"><b>《用户协议》</b></a> 与 <a href="privacy.html"><b>《隐私政策》</b></a> · 因产品性质，购买之后无法退款':'支付即代表同意 <a href="terms.html"><b>《用戶協議》</b></a> 與 <a href="privacy.html"><b>《隱私政策》</b></a> · 因產品性質，購買之後無法退款',
+'我已阅读并同意 <a href="terms.html">《用户协议》</a> 与 <a href="privacy.html">《隐私政策》</a>':'我已閱讀並同意 <a href="terms.html">《用戶協議》</a> 與 <a href="privacy.html">《隱私政策》</a>',
 '登录':'登入',
 '注册':'註冊',
 '邮箱':'郵箱',
@@ -942,8 +942,8 @@ var T={
 '收款地址（USDT · BEP-20 / ERC-20）':'Receiving address (USDT · BEP-20 / ERC-20)',
 '📋 复制地址':'📋 Copy address',
 '转账时请备注您的<b style="color:#C7D2E4">注册邮箱</b>，链上确认后自动到账。<br>如有疑问请联系 QQ 客服：2139743118':'Please include your <b style="color:#C7D2E4">registered email</b> in the memo. Credited automatically after on-chain confirmation.<br>Questions? Contact QQ support: 2139743118',
-'支付即代表同意 <b>《用户协议》</b> 与 <b>《隐私政策》</b> · 因产品性质，购买之后无法退款':'By paying you agree to the <b>User Agreement</b> and <b>Privacy Policy</b>. Due to the nature of the product, all purchases are non-refundable.',
-'我已阅读并同意 <a data-tk="《用户协议》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《用户协议》</a> 与 <a data-tk="《隐私政策》整理中，敬请期待" onclick="toastI(this.dataset.tk)">《隐私政策》</a>':'I have read and agree to the <a data-tk="《用户协议》整理中，敬请期待" onclick="toastI(this.dataset.tk)">User Agreement</a> and <a data-tk="《隐私政策》整理中，敬请期待" onclick="toastI(this.dataset.tk)">Privacy Policy</a>',
+'支付即代表同意 <a href="terms.html"><b>《用户协议》</b></a> 与 <a href="privacy.html"><b>《隐私政策》</b></a> · 因产品性质，购买之后无法退款':'By paying you agree to the <a href="terms.html"><b>User Agreement</b></a> and <a href="privacy.html"><b>Privacy Policy</b></a>. Due to the nature of the product, all purchases are non-refundable.',
+'我已阅读并同意 <a href="terms.html">《用户协议》</a> 与 <a href="privacy.html">《隐私政策》</a>':'I have read and agree to the <a href="terms.html">User Agreement</a> and <a href="privacy.html">Privacy Policy</a>',
 '登录':'Log in',
 '注册':'Sign up',
 '邮箱':'Email',
@@ -1006,5 +1006,4 @@ setLang(curLang);
 </script>
 </body>
 </html>
-
 
