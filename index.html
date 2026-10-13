@@ -413,7 +413,7 @@
           <div class="plat" id="plat-windows">
             <div class="dlcard" style="border-color:rgba(46,124,246,.45)">
               <h4>🪟 Windows 10 / 11（推荐）</h4>
-              <small>安装包 · 支持 x86 / x64 · v1.5.0 · 26.7 MB · 单窗口一键开关 · 安装到桌面</small>
+              <small>安装包 · 支持 x86 / x64 · v1.5.0 · 26.8 MB · 单窗口一键开关 · 安装到桌面</small>
               <div class="dlrow">
                 <span class="dlfile">XiaoTao-Setup-x32.exe</span>
                 <div style="display:flex; gap:10px; flex-wrap:wrap">
@@ -684,35 +684,76 @@ function lTab(m){
   document.getElementById('l-foot').innerHTML=(m==='reg'?tr('已有账号？ '):tr('还没有账号？ '))+(m==='reg'?'<b onclick="lTab(\'login\')">'+tr('去登录')+'</b>':'<b onclick="lTab(\'reg\')">'+tr('立即注册')+'</b>');
 }
 function lAgree(){ lOk=!lOk; document.getElementById('l-agree').textContent=lOk?'✓':''; document.getElementById('l-agree').style.background=lOk?'var(--p)':'transparent'; }
-var lCodeVal='', lCdTimer=null;
+var lCdTimer=null;
+/* ---------- 邮箱验证码后端（Google Apps Script Web 应用） ----------
+   Apps Script 的响应不带 CORS 头，无法用 fetch 读回结果，
+   故统一走 JSONP：动态插 <script>，由回调拿数据。 */
+var MAIL_API='https://script.google.com/macros/s/AKfycbzZaj6ZH52wNwsMFGQAKm05T1LA2l-o9fmtj0B_MIhH-G0dE-gocH8DFzt7dDlBIzN_Rg/exec';
+var _jpSeq=0;
+function mailApi(params, cb){
+  var name='__xtcb'+(++_jpSeq)+'_'+(Date.now()%1000000);
+  var qs=[];
+  for(var k in params){ qs.push(encodeURIComponent(k)+'='+encodeURIComponent(params[k])); }
+  var script=document.createElement('script'), done=false;
+  var timer=setTimeout(function(){ finish({error:'timeout'}); },15000);
+  function finish(d){
+    if(done) return; done=true;
+    clearTimeout(timer);
+    try{ delete window[name]; }catch(e){ window[name]=undefined; }
+    if(script.parentNode) script.parentNode.removeChild(script);
+    cb(d||{});
+  }
+  window[name]=finish;
+  script.onerror=function(){ finish({error:'network'}); };
+  script.src=MAIL_API+'?'+qs.join('&')+'&callback='+name+'&_='+Date.now();
+  document.body.appendChild(script);
+}
 function lSendCode(){
   if(lMode!=='reg') return;
   var em=document.getElementById('l-email').value.trim();
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ toast('请输入正确的邮箱'); return; }
-  // 演示：本地生成 6 位验证码并弹窗展示；接入后端后改为调用 /api/verify/send 发真实邮件
-  lCodeVal=String(Math.floor(100000+Math.random()*900000));
-  toast('验证码已发送（演示）：'+lCodeVal);
-  var b=document.getElementById('l-codebtn'), s=60;
-  b.disabled=true; b.style.opacity='.6';
-  clearInterval(lCdTimer);
-  lCdTimer=setInterval(function(){
-    s--;
-    if(s<=0){ clearInterval(lCdTimer); b.disabled=false; b.style.opacity='1'; b.textContent=tr('获取验证码'); return; }
-    b.textContent=s+'s';
-  },1000);
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ toast(tr('请输入正确的邮箱')); return; }
+  var b=document.getElementById('l-codebtn');
+  if(b.disabled) return;
+  b.disabled=true; b.style.opacity='.6'; b.textContent=tr('发送中...');
+  mailApi({action:'send',email:em}, function(r){
+    if(r && r.ok){
+      toast(tr('验证码已发送至 ')+em+tr('，请查收（含垃圾邮件箱）'));
+      var s=60; clearInterval(lCdTimer);
+      lCdTimer=setInterval(function(){
+        s--;
+        if(s<=0){ clearInterval(lCdTimer); b.disabled=false; b.style.opacity='1'; b.textContent=tr('获取验证码'); return; }
+        b.textContent=s+'s';
+      },1000);
+      return;
+    }
+    b.disabled=false; b.style.opacity='1'; b.textContent=tr('获取验证码');
+    var e=(r&&r.error)||'network';
+    toast(e==='rate_limited'?tr('发送过于频繁，请 60 秒后再试')
+        :(e==='invalid_email'?tr('请输入正确的邮箱'):tr('发送失败，请稍后重试')));
+  });
 }
 function lSubmit(){
-  if(!document.getElementById('l-email').value.trim()){ toast('请输入邮箱'); return; }
+  var em=document.getElementById('l-email').value.trim();
+  if(!em){ toast(tr('请输入邮箱')); return; }
+  var c='';
   if(lMode==='reg'){
-    var c=document.getElementById('l-code').value.trim();
-    if(!c){ toast('请输入邮箱验证码'); return; }
-    if(c!==lCodeVal){ toast('验证码错误'); return; }
+    c=document.getElementById('l-code').value.trim();
+    if(!c){ toast(tr('请输入邮箱验证码')); return; }
   }
-  if(!document.getElementById('l-pw').value){ toast('请输入密码'); return; }
-  if(lMode==='reg' && document.getElementById('l-pw').value!==document.getElementById('l-pw2').value){ toast('两次输入的密码不一致'); return; }
-  if(!lOk){ toast('请先勾选同意《用户协议》与《隐私政策》'); return; }
-  closeM('login-m');
-  toast(lMode==='reg'?'注册成功（演示），账号体系接入后即可使用':'登录成功（演示）');
+  if(!document.getElementById('l-pw').value){ toast(tr('请输入密码')); return; }
+  if(lMode==='reg' && document.getElementById('l-pw').value!==document.getElementById('l-pw2').value){ toast(tr('两次输入的密码不一致')); return; }
+  if(!lOk){ toast(tr('请先勾选同意《用户协议》与《隐私政策》')); return; }
+  if(lMode!=='reg'){ closeM('login-m'); toast(tr('登录成功（演示）')); return; }
+  // 注册：验证码交后端校验（服务端保存，前端比对不作数）
+  var btn=document.getElementById('l-btn'), old=btn.textContent;
+  btn.disabled=true; btn.textContent=tr('验证中...');
+  mailApi({action:'verify',email:em,code:c}, function(r){
+    btn.disabled=false; btn.textContent=old;
+    if(r && r.ok){ closeM('login-m'); toast(tr('邮箱验证通过，请联系客服开通账号')); return; }
+    var e=(r&&r.error)||'network';
+    toast(e==='mismatch'?tr('验证码错误')
+        :(e==='expired'?tr('验证码已过期，请重新获取'):tr('验证失败，请稍后重试')));
+  });
 }
 /* ---------- i18n 简/繁/EN 切换 ---------- */
 var LANGS=['zh-Hans','zh-Hant','en'];
@@ -811,7 +852,7 @@ var T={
 '选择您的设备平台，获取最新版本':'選擇您的設備平台，獲取最新版本',
 '🪟 Windows 10 / 11（推荐）':'🪟 Windows 10 / 11（推薦）',
 '支持 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解压即用，无需安装':'支援 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解壓即用，無需安裝',
-'安装包 · 支持 x86 / x64 · v1.5.0 · 26.7 MB · 单窗口一键开关 · 安装到桌面':'安裝包 · 支援 x86 / x64 · v1.5.0 · 26.7 MB · 單窗口一鍵開關 · 安裝到桌面',
+'安装包 · 支持 x86 / x64 · v1.5.0 · 26.8 MB · 单窗口一键开关 · 安装到桌面':'安裝包 · 支援 x86 / x64 · v1.5.0 · 26.8 MB · 單窗口一鍵開關 · 安裝到桌面',
 '🤖 Android 7.0+（推荐）':'🤖 Android 7.0+（推薦）',
 '安装包 · ARM64 / ARMv7 / x86_64 全架构 · v1.0.0 · 单窗口一键开关 · 全球高速节点':'安裝包 · ARM64 / ARMv7 / x86_64 全架構 · v1.0.0 · 單窗口一鍵開關 · 全球高速節點',
 '下载后解压安装里面的 APK；首次安装需允许"安装未知来源应用"，首次连接需授予"虚拟专用网络（VPN）"权限':'下載後解壓安裝裡面的 APK；首次安裝需允許"安裝未知來源應用"，首次連接需授予"虛擬專用網絡（VPN）"權限',
@@ -855,8 +896,15 @@ var T={
 '获取验证码':'獲取驗證碼',
 '请输入邮箱验证码':'請輸入郵箱驗證碼',
 '验证码错误':'驗證碼錯誤',
-'请输入正确的邮箱':'請輸入正確的郵箱',
-'验证码已发送（演示）：':'驗證碼已發送（演示）：',
+ '请输入正确的邮箱':'請輸入正確的郵箱',
+  '验证码已发送至 ':'驗證碼已發送至 ',
+ '，请查收（含垃圾邮件箱）':'，請查收（含垃圾郵件箱）',
+ '发送中...':'發送中...',
+ '发送过于频繁，请 60 秒后再试':'發送過於頻繁，請 60 秒後再試',
+ '发送失败，请稍后重试':'發送失敗，請稍後重試',
+ '验证中...':'驗證中...',
+ '验证码已过期，请重新获取':'驗證碼已過期，請重新獲取',
+ '验证失败，请稍后重试':'驗證失敗，請稍後重試',
 '密码':'密碼',
 '请输入密码':'請輸入密碼',
 '确认密码':'確認密碼',
@@ -876,7 +924,7 @@ var T={
 '《用户协议》整理中，敬请期待':'《用戶協議》整理中，敬請期待',
 '两次输入的密码不一致':'兩次輸入的密碼不一致',
 '请先勾选同意《用户协议》与《隐私政策》':'請先勾選同意《用戶協議》與《隱私政策》',
-'注册成功（演示），账号体系接入后即可使用':'註冊成功（演示），帳號體系接入後即可使用',
+'邮箱验证通过，请联系客服开通账号':'信箱驗證通過，請聯繫客服開通帳號',
 '登录成功（演示）':'登入成功（演示）'
 },
 'en':{
@@ -971,7 +1019,7 @@ var T={
 '选择您的设备平台，获取最新版本':'Pick your device platform to get the latest version',
 '🪟 Windows 10 / 11（推荐）':'🪟 Windows 10 / 11 (Recommended)',
 '支持 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解压即用，无需安装':'x86 / x64 · v1.0.0 · 26.4 MB · unzip and run, no install needed',
-'安装包 · 支持 x86 / x64 · v1.5.0 · 26.7 MB · 单窗口一键开关 · 安装到桌面':'Installer · x86 / x64 · v1.5.0 · 26.7 MB · single window, one-click on/off, install to desktop',
+'安装包 · 支持 x86 / x64 · v1.5.0 · 26.8 MB · 单窗口一键开关 · 安装到桌面':'Installer · x86 / x64 · v1.5.0 · 26.8 MB · single window, one-click on/off, install to desktop',
 '🤖 Android 7.0+（推荐）':'🤖 Android 7.0+ (Recommended)',
 '安装包 · ARM64 / ARMv7 / x86_64 全架构 · v1.0.0 · 单窗口一键开关 · 全球高速节点':'Installer · ARM64 / ARMv7 / x86_64 · v1.0.0 · one-click on/off · global high-speed nodes',
 '下载后解压安装里面的 APK；首次安装需允许"安装未知来源应用"，首次连接需授予"虚拟专用网络（VPN）"权限':'Unzip and install the APK inside; allow "Install unknown apps" on first install, and grant the "Virtual Private Network (VPN)" permission on first connect',
@@ -1016,8 +1064,15 @@ var T={
 '获取验证码':'Get code',
 '请输入邮箱验证码':'Enter the email verification code',
 '验证码错误':'Incorrect code',
-'请输入正确的邮箱':'Enter a valid email',
-'验证码已发送（演示）：':'Verification code sent (demo): ',
+ '请输入正确的邮箱':'Enter a valid email',
+  '验证码已发送至 ':'Verification code sent to ',
+ '，请查收（含垃圾邮件箱）':'. Please check your inbox (and spam folder).',
+ '发送中...':'Sending...',
+ '发送过于频繁，请 60 秒后再试':'Too many requests — please wait 60 seconds',
+ '发送失败，请稍后重试':'Sending failed, please try again later',
+ '验证中...':'Verifying...',
+ '验证码已过期，请重新获取':'Code expired — please request a new one',
+ '验证失败，请稍后重试':'Verification failed, please try again later',
 '密码':'Password',
 '请输入密码':'Enter your password',
 '确认密码':'Confirm password',
@@ -1037,7 +1092,7 @@ var T={
 '《用户协议》整理中，敬请期待':'The User Agreement is being prepared — stay tuned',
 '两次输入的密码不一致':'The two passwords do not match',
 '请先勾选同意《用户协议》与《隐私政策》':'Please tick the box to accept the User Agreement and Privacy Policy first',
-'注册成功（演示），账号体系接入后即可使用':'Registration successful (demo) — usable once the account system is live',
+'邮箱验证通过，请联系客服开通账号':'Email verified — contact support to activate your account',
 '登录成功（演示）':'Login successful (demo)'
 }
 };
