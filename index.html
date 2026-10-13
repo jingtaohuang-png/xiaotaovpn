@@ -439,7 +439,19 @@
             <div class="dlcard"><h4>🍎 iOS / iPadOS</h4><small>需 iOS 16 及以上</small><div class="dlrow"><span class="soonest">即将上线，敬请期待</span></div></div>
           </div>
           <div class="plat" id="plat-android" style="display:none">
-            <div class="dlcard"><h4>🤖 Android</h4><small>需 Android 9 及以上</small><div class="dlrow"><span class="soonest">即将上线，敬请期待</span></div></div>
+            <div class="dlcard" style="border-color:rgba(46,124,246,.45)">
+              <h4>🤖 Android 7.0+（推荐）</h4>
+              <small>安装包 · ARM64 / ARMv7 / x86_64 全架构 · v1.0.0 · 单窗口一键开关 · 全球高速节点</small>
+              <div class="dlrow">
+                <span class="dlfile">XiaoTao-Android-v1.0.0.apk</span>
+                <div style="display:flex; gap:10px; flex-wrap:wrap">
+                  <a class="btn" style="padding:11px 22px; font-size:13.5px" href="https://xiaotaovpn.oss-cn-beijing.aliyuncs.com/XiaoTao-Android-v1.0.0" download="XiaoTao-Android-v1.0.0.apk">⬇ 立即下载</a>
+                </div>
+              </div>
+              <div class="dlrow" style="margin-top:10px">
+                <span style="color:#4B5A75; font-size:12px; line-height:1.7">安装提示：首次安装需允许"安装未知来源应用"；首次连接需授予"虚拟专用网络（VPN）"权限</span>
+              </div>
+            </div>
           </div>
           <div class="plat" id="plat-linux" style="display:none">
             <div class="dlcard"><h4>🐧 Linux</h4><small>Debian / Ubuntu / Arch</small><div class="dlrow"><span class="soonest">即将上线，敬请期待</span></div></div>
@@ -535,6 +547,13 @@
       <div class="ltab" id="lt-reg" onclick="lTab('reg')">注册</div>
     </div>
     <div class="fgroup"><label>邮箱</label><input id="l-email" placeholder="请输入邮箱"></div>
+    <div class="fgroup" id="l-codeg" style="display:none">
+      <label>邮箱验证码</label>
+      <div style="display:flex; gap:8px">
+        <input id="l-code" placeholder="6 位验证码" style="flex:1">
+        <button type="button" id="l-codebtn" onclick="lSendCode()" style="white-space:nowrap; padding:0 14px; border:1px solid rgba(46,124,246,.6); color:var(--p); background:transparent; border-radius:10px; cursor:pointer; font-size:13px">获取验证码</button>
+      </div>
+    </div>
     <div class="fgroup"><label>密码</label><input id="l-pw" type="password" placeholder="请输入密码"></div>
     <div class="fgroup" id="l-pw2g" style="display:none"><label>确认密码</label><input id="l-pw2" type="password" placeholder="请再次输入密码"></div>
     <div class="fgroup" id="l-invg" style="display:none"><label>邀请码（选填）</label><input id="l-inv" placeholder="有邀请码可享受更多权益"></div>
@@ -660,12 +679,35 @@ function lTab(m){
   document.getElementById('lt-reg').classList.toggle('on', m==='reg');
   document.getElementById('l-pw2g').style.display=m==='reg'?'block':'none';
   document.getElementById('l-invg').style.display=m==='reg'?'block':'none';
+  document.getElementById('l-codeg').style.display=m==='reg'?'block':'none';
   document.getElementById('l-btn').textContent=tr(m==='reg'?'立即注册':'立即登录');
   document.getElementById('l-foot').innerHTML=(m==='reg'?tr('已有账号？ '):tr('还没有账号？ '))+(m==='reg'?'<b onclick="lTab(\'login\')">'+tr('去登录')+'</b>':'<b onclick="lTab(\'reg\')">'+tr('立即注册')+'</b>');
 }
 function lAgree(){ lOk=!lOk; document.getElementById('l-agree').textContent=lOk?'✓':''; document.getElementById('l-agree').style.background=lOk?'var(--p)':'transparent'; }
+var lCodeVal='', lCdTimer=null;
+function lSendCode(){
+  if(lMode!=='reg') return;
+  var em=document.getElementById('l-email').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ toast('请输入正确的邮箱'); return; }
+  // 演示：本地生成 6 位验证码并弹窗展示；接入后端后改为调用 /api/verify/send 发真实邮件
+  lCodeVal=String(Math.floor(100000+Math.random()*900000));
+  toast('验证码已发送（演示）：'+lCodeVal);
+  var b=document.getElementById('l-codebtn'), s=60;
+  b.disabled=true; b.style.opacity='.6';
+  clearInterval(lCdTimer);
+  lCdTimer=setInterval(function(){
+    s--;
+    if(s<=0){ clearInterval(lCdTimer); b.disabled=false; b.style.opacity='1'; b.textContent=tr('获取验证码'); return; }
+    b.textContent=s+'s';
+  },1000);
+}
 function lSubmit(){
   if(!document.getElementById('l-email').value.trim()){ toast('请输入邮箱'); return; }
+  if(lMode==='reg'){
+    var c=document.getElementById('l-code').value.trim();
+    if(!c){ toast('请输入邮箱验证码'); return; }
+    if(c!==lCodeVal){ toast('验证码错误'); return; }
+  }
   if(!document.getElementById('l-pw').value){ toast('请输入密码'); return; }
   if(lMode==='reg' && document.getElementById('l-pw').value!==document.getElementById('l-pw2').value){ toast('两次输入的密码不一致'); return; }
   if(!lOk){ toast('请先勾选同意《用户协议》与《隐私政策》'); return; }
@@ -770,6 +812,9 @@ var T={
 '🪟 Windows 10 / 11（推荐）':'🪟 Windows 10 / 11（推薦）',
 '支持 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解压即用，无需安装':'支援 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解壓即用，無需安裝',
 '安装包 · 支持 x86 / x64 · v1.5.0 · 26.7 MB · 单窗口一键开关 · 安装到桌面':'安裝包 · 支援 x86 / x64 · v1.5.0 · 26.7 MB · 單窗口一鍵開關 · 安裝到桌面',
+'🤖 Android 7.0+（推荐）':'🤖 Android 7.0+（推薦）',
+'安装包 · ARM64 / ARMv7 / x86_64 全架构 · v1.0.0 · 单窗口一键开关 · 全球高速节点':'安裝包 · ARM64 / ARMv7 / x86_64 全架構 · v1.0.0 · 單窗口一鍵開關 · 全球高速節點',
+'安装提示：首次安装需允许"安装未知来源应用"；首次连接需授予"虚拟专用网络（VPN）"权限':'安裝提示：首次安裝需允許"安裝未知來源應用"；首次連接需授予"虛擬專用網絡（VPN）"權限',
 '⬇ 免安装版':'⬇ 免安裝版',
 '⬇ 立即下载':'⬇ 立即下載',
 '安装说明':'安裝說明',
@@ -805,6 +850,13 @@ var T={
 '注册':'註冊',
 '邮箱':'郵箱',
 '请输入邮箱':'請輸入郵箱',
+'邮箱验证码':'郵箱驗證碼',
+'6 位验证码':'6 位驗證碼',
+'获取验证码':'獲取驗證碼',
+'请输入邮箱验证码':'請輸入郵箱驗證碼',
+'验证码错误':'驗證碼錯誤',
+'请输入正确的邮箱':'請輸入正確的郵箱',
+'验证码已发送（演示）：':'驗證碼已發送（演示）：',
 '密码':'密碼',
 '请输入密码':'請輸入密碼',
 '确认密码':'確認密碼',
@@ -920,6 +972,9 @@ var T={
 '🪟 Windows 10 / 11（推荐）':'🪟 Windows 10 / 11 (Recommended)',
 '支持 x86 / x64 · 版本 v1.0.0 · 26.4 MB · 解压即用，无需安装':'x86 / x64 · v1.0.0 · 26.4 MB · unzip and run, no install needed',
 '安装包 · 支持 x86 / x64 · v1.5.0 · 26.7 MB · 单窗口一键开关 · 安装到桌面':'Installer · x86 / x64 · v1.5.0 · 26.7 MB · single window, one-click on/off, install to desktop',
+'🤖 Android 7.0+（推荐）':'🤖 Android 7.0+ (Recommended)',
+'安装包 · ARM64 / ARMv7 / x86_64 全架构 · v1.0.0 · 单窗口一键开关 · 全球高速节点':'Installer · ARM64 / ARMv7 / x86_64 · v1.0.0 · one-click on/off · global high-speed nodes',
+'安装提示：首次安装需允许"安装未知来源应用"；首次连接需授予"虚拟专用网络（VPN）"权限':'Install note: allow "Install unknown apps" on first install; grant the "Virtual Private Network (VPN)" permission on first connect',
 '⬇ 免安装版':'⬇ Portable version',
 '⬇ 立即下载':'⬇ Download now',
 '安装说明':'Installation guide',
@@ -956,6 +1011,13 @@ var T={
 '注册':'Sign up',
 '邮箱':'Email',
 '请输入邮箱':'Enter your email',
+'邮箱验证码':'Email verification code',
+'6 位验证码':'6-digit code',
+'获取验证码':'Get code',
+'请输入邮箱验证码':'Enter the email verification code',
+'验证码错误':'Incorrect code',
+'请输入正确的邮箱':'Enter a valid email',
+'验证码已发送（演示）：':'Verification code sent (demo): ',
 '密码':'Password',
 '请输入密码':'Enter your password',
 '确认密码':'Confirm password',
